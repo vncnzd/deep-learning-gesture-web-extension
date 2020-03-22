@@ -3,7 +3,7 @@
     "name": "Machine Learning Gesture Web Extension",
     "author": "Vincenz Dziedzina",
     "version": "0.1",
-
+    "content_security_policy": "script-src 'self' 'unsafe-eval'; object-src 'self'",
     "options_ui": {
         "page": "options/options.html",
         "open_in_tab": true
