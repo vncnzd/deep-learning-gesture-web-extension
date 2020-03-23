@@ -4,9 +4,37 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Options</title>
+    <link rel="stylesheet" href="../dist/main.css">
 </head>
 <body>
-    <h1>Options</h1>
+    <header class="background-blue">
+        <h1 class="text-center">Options</h1>
+    </header>
+    <main class="grid-container">
+        <div class="video-box column-start-1 column-span-1">
+            <div class="video-box-headline">
+                PREVIEW
+            </div>
+            <video id="webcam-video"  autoplay="true"></video>
+        </div>
+        <div>
+            <p>Feature:</p>
+            <select>
+                <option value="0" selected>Idle</option>
+                <option value="1">Open new tab</option>
+                <option value="2">Remove current tab</option>
+                <option value="3">Reload current tab</option>
+            </select>
+            <button>Capture image</button>
+            <p>Examples: <span>0</span></p>
+            <button>Train network</button>
+        </div>
+        <div class="video-box">
+            <div class="video-box-headline">
+                Captured Image
+            </div>
+        </div>
+    </main>
     <script src="../dist/main.js"></script>
 </body>
 </html>

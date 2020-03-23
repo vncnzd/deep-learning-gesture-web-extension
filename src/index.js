@@ -1,3 +1,5 @@
+import './style.scss';
+
 const tf = require('@tensorflow/tfjs');
 
 // Train a simple model:
