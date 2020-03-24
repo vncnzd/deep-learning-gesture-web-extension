@@ -1,4 +1,10 @@
+// Variables
+
 $main-color: #007bff;
+$dark-color :#343a40;
+$border: 1px solid rgba($color: #000000, $alpha: 0.15);
+
+// Elements
 
 html {
     font-size: 16px;
@@ -10,9 +16,10 @@ body {
     margin: 0px;
 }
 
-.text-center {
-    text-align: center;
+p {
+    margin: 0px;
 }
+
 
 h1 {
     font-size: 2rem;
@@ -20,13 +27,26 @@ h1 {
     margin: 0px;
 }
 
-.background-blue {
-    background-color: $main-color;
-}
-
 header {
     grid-column: span 3;
     padding: 1rem;
+}
+
+main {
+    max-width: 1000px;
+    margin-left: auto;
+    margin-right: auto;
+    margin-top: 2rem;
+}
+
+// Classes
+
+.text-center {
+    text-align: center;
+}
+
+.background-blue {
+    background-color: $main-color;
 }
 
 .grid-container {
@@ -35,14 +55,8 @@ header {
     grid-template-columns: repeat(3, 1fr);
 }
 
-main {
-    max-width: 1000px;
-    margin-left: auto;
-    margin-right: auto;
-}
-
 .video-box {
-    border: 1px solid rgba($color: #000000, $alpha: 0.15);
+    border: $border;
     margin: 1rem;
     border-radius: 0.5rem;
 }
@@ -51,7 +65,54 @@ main {
     text-align: center;
     padding: 1rem;
     font-weight: bold;
-    border-bottom: 1px solid rgba($color: #000000, $alpha: 0.15);
+    border-bottom: $border;
+    background-color: darken($color: white, $amount: 5);
+}
+
+.background-maincolor {
+    background-color: $main-color;
+}
+
+.button.background-maincolor:hover {
+    background-color: darken($color: $main-color, $amount: 5);
+}
+
+.background-dark {
+    background-color: $dark-color;
+}
+
+.button.background-dark:hover {
+    background-color: darken($color: $dark-color, $amount: 4);
+}
+
+.button {
+    width: 100%;
+    color: white;
+    border: none;
+    border-radius: 0.5rem;
+    padding: 0.5rem;
+    margin-top: 1rem;
+}
+
+.loading-bar-wrapper {
+    border: $border;
+    border-radius: 1rem;
+    background-color: darken($color: white, $amount: 4);
+}
+
+.loading-bar {
+    height: 1rem;
+    background-color: $main-color;
+    border-radius: 1rem;
+    width: 50%;
+}
+
+.full-width {
+    width: 100%;
+}
+
+.padding-1 {
+    padding: 1rem;
 }
 
 .column-span-1 {
@@ -76,4 +137,10 @@ main {
 
 .column-start-3 {
     grid-column-start: 3;
+}
+
+// IDs
+
+#settings-grid-item {
+    padding-top: 2rem;
 }
