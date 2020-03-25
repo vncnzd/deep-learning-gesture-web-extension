@@ -58,7 +58,8 @@ main {
 .video-box {
     border: $border;
     margin: 1rem;
-    border-radius: 0.5rem;
+    border-top-left-radius: 0.5rem;
+    border-top-right-radius: 0.5rem;
 }
 
 .video-box-headline {
@@ -143,4 +144,9 @@ main {
 
 #settings-grid-item {
     padding-top: 2rem;
+}
+
+#webcam-video {
+    display: block;
+    width: 100%;
 }

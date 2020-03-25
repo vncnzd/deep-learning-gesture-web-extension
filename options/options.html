@@ -12,9 +12,7 @@
     </header>
     <main class="grid-container">
         <div class="video-box column-start-1 column-span-1">
-            <div class="video-box-headline">
-                PREVIEW
-            </div>
+            <div class="video-box-headline">PREVIEW</div>
             <video id="webcam-video"  autoplay="true"></video>
         </div>
         <div class="column-span-1" id="settings-grid-item">
@@ -25,7 +23,7 @@
                 <option value="2">Remove current tab</option>
                 <option value="3">Reload current tab</option>
             </select>
-            <button class="button background-maincolor">Capture image</button>
+            <button class="button background-maincolor" id="capture-image-button">Capture image</button>
             <p>Examples: <span>0</span></p>
             <label for="number-of-epochs-input">Number of epochs:</label>
             <input type="number" name="number-of-epochs-input" id="number-of-epochs-input" min="1" max="10000" value="50">
