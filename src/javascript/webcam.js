@@ -24,8 +24,9 @@ class Webcam {
         // That is why the dimension has to be expanded by one.
         let expandedImageTensor = tf.expandDims(quadraticImageTensor, 0);
         let resizedImageTensor = tf.image.resizeBilinear(expandedImageTensor, [this.imageTensorSize, this.imageTensorSize]);
+        let normalizedImageTensor = resizedImageTensor.toFloat().div(tf.scalar(255));
 
-        return tf.squeeze(resizedImageTensor);
+        return tf.squeeze(normalizedImageTensor);
     }
 
     sliceImageTensorToQuadratic(imageTensor) {
