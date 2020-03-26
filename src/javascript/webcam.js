@@ -23,8 +23,9 @@ class Webcam {
         // The resizeBilinear function needs a shape of  shape [batch, height, width, inChannels].
         // That is why the dimension has to be expanded by one.
         let expandedImageTensor = tf.expandDims(quadraticImageTensor, 0);
+        let resizedImageTensor = tf.image.resizeBilinear(expandedImageTensor, [this.imageTensorSize, this.imageTensorSize]);
 
-        return tf.image.resizeBilinear(expandedImageTensor, [this.imageTensorSize, this.imageTensorSize]);
+        return tf.squeeze(resizedImageTensor);
     }
 
     sliceImageTensorToQuadratic(imageTensor) {

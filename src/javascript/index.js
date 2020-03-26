@@ -1,11 +1,33 @@
+import * as tf from '@tensorflow/tfjs';
 import '../sass/style.scss';
 import Webcam from './webcam.js';
 
-let captureImageButton = document.querySelector("#capture-image-button");
-let videoElement = document.querySelector('#webcam-video');
-let webcam = new Webcam(videoElement);
+class App {
+    constructor() {
+        this.captureImageButton = document.querySelector("#capture-image-button");
+        this.videoElement = document.querySelector('#webcam-video');
+        this.webcam = new Webcam(this.videoElement);
 
-captureImageButton.addEventListener('click', function() {
-    console.log(webcam.captureImageAndGetTensor());
-});
+        this.addEventListeners();
+    }
+
+    addEventListeners() {
+        let self = this;
+
+        this.captureImageButton.addEventListener('click', function() {
+            let imageTensor = self.webcam.captureImageAndGetTensor();
+            let expandedImageTensor = tf.expandDims(imageTensor, 0);
+
+            if (self.imageTensors == undefined) {
+                self.imageTensors = expandedImageTensor
+            } else {
+                self.imageTensors = tf.concat([self.imageTensors, expandedImageTensor], 0);
+            }
+
+            console.log(self.imageTensors);
+        });
+    }
+}
+
+let app = new App();
 
