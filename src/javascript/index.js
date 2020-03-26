@@ -6,6 +6,7 @@ class App {
     constructor() {
         this.captureImageButton = document.querySelector("#capture-image-button");
         this.videoElement = document.querySelector('#webcam-video');
+        this.imagePreviewCanvas = document.querySelector('#image-preview-canvas');
         this.webcam = new Webcam(this.videoElement);
 
         this.addEventListeners();
@@ -16,6 +17,8 @@ class App {
 
         this.captureImageButton.addEventListener('click', function() {
             let imageTensor = self.webcam.captureImageAndGetTensor();
+            tf.browser.toPixels(imageTensor, self.imagePreviewCanvas)
+
             let expandedImageTensor = tf.expandDims(imageTensor, 0);
 
             if (self.imageTensors == undefined) {

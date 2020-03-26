@@ -13,7 +13,9 @@
     <main class="grid-container">
         <div class="video-box column-start-1 column-span-1">
             <div class="video-box-headline">PREVIEW</div>
-            <video id="webcam-video"  autoplay="true"></video>
+            <div>
+                <video id="webcam-video"  autoplay="true"></video>
+            </div>
         </div>
         <div class="column-span-1" id="settings-grid-item">
             <p>Feature:</p>
@@ -33,6 +35,7 @@
             <div class="video-box-headline">
                 Captured Image
             </div>
+            <canvas id="image-preview-canvas"></canvas>
         </div>
         <div class="column-start-1 column-span-3 padding-1">
             <p>Loss: <span></span></p>
