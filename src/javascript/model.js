@@ -60,9 +60,25 @@ class Model {
 
     compileModel(model) {
         model.compile({
-            optimizer: tf.train.adam();,
+            optimizer: tf.train.adam(),
             loss: 'categoricalCrossentropy',
             metrics: ['accuracy'],
+        });
+    }
+
+    async train(imageTensors, labelTensors, numberOfEpochs) {
+        await this.model.fit(imageTensors, labelTensors, {
+            batch_size: 20,
+            epochs: numberOfEpochs,
+            callbacks: {
+                onEpochEnd: async (batch, logs) => {
+                    console.log(logs.loss.toFixed(7));
+                    // progress+=progressStep;
+                    // progressBarElement.style.width= progress + "%";
+                    
+                    // lossDisplayElement.innerHTML = logs.loss.toFixed(7);
+                },
+            }
         });
     }
 
@@ -70,3 +86,5 @@ class Model {
         return this.model;
     }
 }
+
+export default Model;
