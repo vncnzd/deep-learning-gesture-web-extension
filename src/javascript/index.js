@@ -12,33 +12,57 @@ class App {
         this.imagePreviewCanvasElement = document.querySelector('#image-preview-canvas');
         this.featureSelectElement = document.querySelector('#feature-select');
         this.examplesSpanElement = document.querySelector("#examples-span");
-        this.numberOfExamples = 0;
+        this.predictButtonElement = document.querySelector("#predict-button");
+        this.numberOfEpochsInputElement = document.querySelector("#number-of-epochs-input");
+        this.loadingBarElement = document.querySelector("#training-loading-bar");
+        this.lossSpanElement = document.querySelector("#loss-span");
 
-        this.webcam = new Webcam(this.videoElement);
+        this.numberOfExamples = 0;
+        this.loadingBarProgress = 0;
+        this.webcam = new Webcam(this.videoElement, 50);
         this.data = new DataContainer();
-        this.model = new Model(2);
+        this.model = new Model(50, 50, 3, 4);
 
         this.addEventListeners();
     }
 
     addEventListeners() {
-        let self = this;
-
-        this.captureImageButtonElement.addEventListener('click', function() {
-            let imageTensor = self.webcam.captureImageAndGetTensor();
-            tf.browser.toPixels(imageTensor, self.imagePreviewCanvasElement)
+        this.captureImageButtonElement.addEventListener('click', () => {
+            let imageTensor = this.webcam.captureImageAndGetTensor();
+            tf.browser.toPixels(imageTensor, this.imagePreviewCanvasElement)
 
             let expandedImageTensor = tf.expandDims(imageTensor, 0);
-            let currentFeature = self.featureSelectElement.options[self.featureSelectElement.selectedIndex].value;
-            let currentFeatureTensor = tf.tidy(() => tf.oneHot(tf.tensor1d([parseInt(currentFeature)]).toInt(), 2));
-            
-            self.data.add(expandedImageTensor, currentFeatureTensor);
-            self.examplesSpanElement.innerHTML = ++self.numberOfExamples;
+            let currentFeature = this.featureSelectElement.options[this.featureSelectElement.selectedIndex].value;
+            let currentFeatureTensor = tf.tidy(() => tf.oneHot(tf.tensor1d([parseInt(currentFeature)]).toInt(), 4));
+
+            this.data.add(expandedImageTensor, currentFeatureTensor);
+            this.examplesSpanElement.innerHTML = ++this.numberOfExamples;
         });
 
-        this.trainNetworkButtonElement.addEventListener('click', function() {
-            self.model.train(self.data.xTrain, self.data.yTrain, 10);
+        this.trainNetworkButtonElement.addEventListener('click', () => {
+            let numberOfEpochs = parseInt(this.numberOfEpochsInputElement.value);
+            this.model.train(this.data.xTrain, this.data.yTrain, numberOfEpochs, this.updateTrainingProgress.bind(this));
         });
+
+        this.predictButtonElement.addEventListener('click', () => {
+            let imageTensor = this.webcam.captureImageAndGetTensor();
+            let resultTensor = tf.tidy(() => { return this.model.predict(imageTensor.expandDims(0)) });
+
+            resultTensor.print();
+
+            tf.dispose(imageTensor);
+            tf.dispose(resultTensor);
+        });
+    }
+
+    updateTrainingProgress(batch, logs) {
+        this.lossSpanElement.innerHTML = logs.loss.toFixed(7);
+
+        let numberOfEpochs = parseInt(this.numberOfEpochsInputElement.value);
+        let progressStep = 100 / numberOfEpochs;
+
+        this.loadingBarProgress += progressStep;
+        this.loadingBarElement.style.width = this.loadingBarProgress + "%";
     }
 }
 

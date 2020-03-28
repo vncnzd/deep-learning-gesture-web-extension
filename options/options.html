@@ -11,10 +11,12 @@
         <h1 class="text-center">Options</h1>
     </header>
     <main class="grid-container">
-        <div class="video-box column-start-1 column-span-1">
-            <div class="video-box-headline">PREVIEW</div>
-            <div>
-                <video id="webcam-video"  autoplay="true"></video>
+        <div class="column-start-1 column-span-1 flex justify-content-center">
+            <div class="video-box">
+                <div class="video-box-headline">PREVIEW</div>
+                <div id="video-wrapper">
+                    <video id="webcam-video"  autoplay="true"></video>
+                </div>
             </div>
         </div>
         <div class="column-span-1" id="settings-grid-item">
@@ -22,25 +24,27 @@
             <select class="full-width" id="feature-select">
                 <option value="0" selected>Idle</option>
                 <option value="1">Open new tab</option>
-                <!-- <option value="2">Remove current tab</option>
-                <option value="3">Reload current tab</option> -->
+                <option value="2">Remove current tab</option>
+                <option value="3">Reload current tab</option>
             </select>
             <button class="button background-maincolor" id="capture-image-button">Capture image</button>
-            <p>Examples: <span id="examples-span">0</span></p>
             <label for="number-of-epochs-input">Number of epochs:</label>
             <input type="number" name="number-of-epochs-input" id="number-of-epochs-input" min="1" max="10000" value="50">
             <button class="button background-dark" id="train-network-button">Train network</button>
+            <button class="button background-dark" id="predict-button">Predict</button>
         </div>
-        <div class="video-box column-span-1">
-            <div class="video-box-headline">
-                Captured Image
+        <div class="column-span-1 flex justify-content-center">
+            <div class="video-box">
+                <div class="video-box-headline">
+                    Captured Image (<span id="examples-span">0</span>)
+                </div>
+                <canvas id="image-preview-canvas"></canvas>
             </div>
-            <canvas id="image-preview-canvas"></canvas>
         </div>
         <div class="column-start-1 column-span-3 padding-1">
-            <p>Loss: <span></span></p>
+            <p>Loss: <span id="loss-span"></span></p>
             <div class="loading-bar-wrapper">
-                <div class="loading-bar"></div>
+                <div class="loading-bar" id="training-loading-bar"></div>
             </div>
         </div>
     </main>
