@@ -2,9 +2,12 @@ const path = require('path');
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 
 module.exports = {
-    entry: './src/javascript/index.js',
+    entry: {
+      main: './src/javascript/index.js',
+      backgroundPredictor: './src/javascript/backgroundPredictor.js'
+    },
     output: {
-        filename: 'main.js',
+        filename: '[name].js',
         path: path.resolve(__dirname, 'dist'),
     },
     plugins: [new MiniCssExtractPlugin()],
