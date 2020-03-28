@@ -12,8 +12,5 @@
         "storage",
         "tabs",
         "activeTab"
-    ],
-    "background" : {
-        "scripts": ["/dist/backgroundPredictor.js"]
-    }
+    ]
 }

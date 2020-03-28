@@ -4,7 +4,6 @@ const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 module.exports = {
     entry: {
       main: './src/javascript/index.js',
-      backgroundPredictor: './src/javascript/backgroundPredictor.js'
     },
     output: {
         filename: '[name].js',
