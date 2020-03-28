@@ -1,4 +1,5 @@
 import * as tf from '@tensorflow/tfjs';
+import { cos } from '@tensorflow/tfjs';
 
 class Webcam {
     constructor(videoElement, imageTensorSize) {
@@ -8,31 +9,26 @@ class Webcam {
 	}
 
     setup() {
-        const self = this;
-
-        navigator.mediaDevices.getUserMedia({ video: true }).then(function(stream) {
-            self.videoElement.srcObject = stream;
-            // self.videoElement.onloadeddata = function() {}
+        navigator.mediaDevices.getUserMedia({ video: true }).then((stream) => {
+            this.videoElement.srcObject = stream;
         });
     }
 
     captureImageAndGetTensor() {
-        let self = this;
-
-        return tf.tidy(function() {
-            let imageTensor = tf.browser.fromPixels(self.videoElement);
-            let quadraticImageTensor = self.sliceImageTensorToQuadratic(imageTensor);
+        return tf.tidy(() => {
+            let imageTensor = tf.browser.fromPixels(this.videoElement);
+            let quadraticImageTensor = this.sliceImageTensorToQuadratic(imageTensor);
 
             // The resizeBilinear function needs a shape of  shape [batch, height, width, inChannels].
             // That is why the dimension has to be expanded by one.
             let expandedImageTensor = quadraticImageTensor.expandDims(0);
-            let resizedImageTensor = tf.image.resizeBilinear(expandedImageTensor, [self.imageTensorSize, self.imageTensorSize]);
+            let resizedImageTensor = tf.image.resizeBilinear(expandedImageTensor, [this.imageTensorSize, this.imageTensorSize]);
             let normalizedImageTensor = tf.tidy(() => resizedImageTensor.toFloat().div(tf.scalar(255)));
 
-            // tf.dispose(imageTensor);
-            // tf.dispose(quadraticImageTensor);
-            // tf.dispose(expandedImageTensor);
-            // tf.dispose(resizedImageTensor);
+            tf.dispose(imageTensor);
+            tf.dispose(quadraticImageTensor);
+            tf.dispose(expandedImageTensor);
+            tf.dispose(resizedImageTensor);
 
             return tf.squeeze(normalizedImageTensor);
         });
