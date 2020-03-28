@@ -1,9 +1,9 @@
 import * as tf from '@tensorflow/tfjs';
 
 class Webcam {
-    constructor(videoElement) {
+    constructor(videoElement, imageTensorSize) {
         this.videoElement = videoElement;
-        this.imageTensorSize = 224;
+        this.imageTensorSize = imageTensorSize;
         this.setup();
 	}
 

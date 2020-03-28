@@ -1,10 +1,10 @@
 import * as tf from '@tensorflow/tfjs';
 
 class Model {
-    constructor(numberOfOutputClasses) {
-        this.imageHeight = 224;
-        this.imageWidth = 224;
-        this.imageChannels = 3;
+    constructor(imageWidth, imageHeight, imageChannels, numberOfOutputClasses) {
+        this.imageWidth = imageWidth;
+        this.imageHeight = imageHeight;
+        this.imageChannels = imageChannels;
         this.numberOfOutputClasses = numberOfOutputClasses;
         this.model = tf.sequential();
 
@@ -66,24 +66,18 @@ class Model {
         });
     }
 
-    async train(imageTensors, labelTensors, numberOfEpochs) {
+    async train(imageTensors, labelTensors, numberOfEpochs, epochCallback) {
         await this.model.fit(imageTensors, labelTensors, {
             batch_size: 20,
             epochs: numberOfEpochs,
             callbacks: {
-                onEpochEnd: async (batch, logs) => {
-                    console.log(logs.loss.toFixed(7));
-                    // progress+=progressStep;
-                    // progressBarElement.style.width= progress + "%";
-                    
-                    // lossDisplayElement.innerHTML = logs.loss.toFixed(7);
-                },
+                onEpochEnd: epochCallback,
             }
         });
     }
 
-    getModel() {
-        return this.model;
+    predict(imageTensor) {
+        return this.model.predict(imageTensor);
     }
 }
 
