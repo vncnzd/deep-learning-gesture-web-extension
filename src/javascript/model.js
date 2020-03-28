@@ -1,12 +1,13 @@
 import * as tf from '@tensorflow/tfjs';
 
 class Model {
-    constructor(imageWidth, imageHeight, imageChannels, numberOfOutputClasses) {
+    constructor(imageWidth, imageHeight, imageChannels, numberOfOutputClasses, storageDirectory) {
         this.imageWidth = imageWidth;
         this.imageHeight = imageHeight;
         this.imageChannels = imageChannels;
         this.numberOfOutputClasses = numberOfOutputClasses;
         this.model = tf.sequential();
+        this.storageDirectory = storageDirectory;
 
         this.addFirstConvolutionalLayer(this.model);
         this.addFirstMaxPoolingLayer(this.model);
@@ -74,6 +75,15 @@ class Model {
                 onEpochEnd: epochCallback,
             }
         });
+
+        this.model.save(this.storageDirectory);
+    }
+
+    async load(storageDirectory) {
+        let model = await tf.loadLayersModel(storageDirectory).then(() => { console.log("Loading successful"); });
+        if (model != null) {
+            this.model = model;
+        }
     }
 
     predict(imageTensor) {
