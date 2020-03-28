@@ -95,6 +95,14 @@ main {
     background-color: darken($color: $dark-color, $amount: 4);
 }
 
+.background-alert {
+    background-color: #c43f3f;
+}
+
+.button.background-alert:hover {
+    background-color: darken($color: #c43f3f, $amount: 4);
+}
+
 .button {
     width: 100%;
     color: white;

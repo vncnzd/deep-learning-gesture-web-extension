@@ -7,7 +7,8 @@ import Model from './model';
 class App {
     constructor() {
         this.captureImageButtonElement = document.querySelector("#capture-image-button");
-        this.trainNetworkButtonElement = document.querySelector("#train-network-button");
+        this.trainNetworkButtonElement = document.querySelector("#train-model-button");
+        this.removeModelButtonElement = document.querySelector("#remove-model-button");
         this.videoElement = document.querySelector('#webcam-video');
         this.imagePreviewCanvasElement = document.querySelector('#image-preview-canvas');
         this.featureSelectElement = document.querySelector('#feature-select');
@@ -21,7 +22,9 @@ class App {
         this.loadingBarProgress = 0;
         this.webcam = new Webcam(this.videoElement, 50);
         this.data = new DataContainer();
-        this.model = new Model(50, 50, 3, 4, 'localstorage://gesture-extension-model');
+        this.modelStorageName = "gesture-extension-model";
+        this.modelStorageDirectory = 'localstorage://' + this.modelStorageName;
+        this.model = new Model(50, 50, 3, 4, this.modelStorageDirectory);
         this.model.load(this.model.storageDirectory);
 
         this.addEventListeners();
@@ -44,6 +47,16 @@ class App {
             let numberOfEpochs = parseInt(this.numberOfEpochsInputElement.value);
             await this.model.train(this.data.xTrain, this.data.yTrain, numberOfEpochs, this.updateTrainingProgress.bind(this));
             this.makePredictionEverySeconds(2)
+        });
+
+        this.removeModelButtonElement.addEventListener('click', () => {
+            Object.keys(localStorage).forEach(key => {
+                if (key.includes(this.modelStorageName)) {
+                    localStorage.removeItem(key);
+                }
+            });
+
+            console.log(Object.keys(localStorage));
         });
     }
 

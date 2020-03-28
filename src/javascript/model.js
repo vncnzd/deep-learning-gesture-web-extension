@@ -80,7 +80,12 @@ class Model {
     }
 
     async load(storageDirectory) {
-        let model = await tf.loadLayersModel(storageDirectory).then(() => { console.log("Loading successful"); });
+        let model = await tf.loadLayersModel(storageDirectory).then(() => { 
+            console.log("Loading model successful"); 
+        }).catch(() => {
+            console.log("No model to load");
+        });
+        
         if (model != null) {
             this.model = model;
         }
