@@ -60,6 +60,20 @@ class DataContainer {
             console.log("Removing of stored images successful");
         });
     }
+
+    getTensorData(index) {
+        return this.xTrain.arraySync()[index];
+    }
+
+    removeTensorFromBatch(index) {
+        let numberOfTensors = this.xTrain.shape[0];
+        console.log(numberOfTensors);
+        let indeces = Array.from(Array(numberOfTensors).keys())
+        indeces.splice(index, 1)
+
+        this.xTrain = tf.tidy(() => { return tf.gather(this.xTrain, indeces); });
+        console.log("Removing tensor successful");
+    }
 }
 
 export default DataContainer;

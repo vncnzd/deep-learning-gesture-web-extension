@@ -12,7 +12,10 @@ class ElementsManager {
         this.lossSpanElement = document.querySelector("#loss-span");
         this.saveImagesButtonElement = document.querySelector("#save-images-button");
         this.loadImagesButtonElement = document.querySelector("#load-images-button");
-        this.removeImageButtonElement = document.querySelector("#remove-images-button");
+        this.removeImagesButtonElement = document.querySelector("#remove-images-button");
+        this.previousImageButtonElement = document.querySelector("#previous-image-button");
+        this.nextImageButtonElement = document.querySelector("#next-image-button");
+        this.removeImageButtonElement = document.querySelector("#remove-image-button")
     }
 }
 

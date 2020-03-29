@@ -10,6 +10,7 @@ class App {
         this.activationThreshold = 0.9;
         this.numberOfExamples = 0;
         this.loadingBarProgress = 0;
+        this.currentImagePreviewIndex = 0;
 
         this.elementsManager = new ElementsManager();
         this.webcam = new Webcam(this.elementsManager.videoElement, 50);
@@ -61,18 +62,44 @@ class App {
         this.elementsManager.loadImagesButtonElement.addEventListener('click', () => {
             this.dataContainer.load().then(() => {
                 if (this.dataContainer.xTrain != null) {
-                    this.numberOfExamples = this.dataContainer.xTrain.shape[0];
-                    this.elementsManager.numberOfExamplesElement.innerHTML = this.numberOfExamples;
+                    this.loadImageWithIndexIntoCanvas(this.currentImagePreviewIndex, this.elementsManager.imagePreviewCanvasElement);
+                    this.setExampleIndicator(this.elementsManager.numberOfExamplesElement);
                 }
             });
         });
 
-        this.elementsManager.removeImageButtonElement.addEventListener('click', () => {
+        this.elementsManager.removeImagesButtonElement.addEventListener('click', () => {
             this.dataContainer.remove().then(() => {
                 this.numberOfExamples = 0;
                 this.elementsManager.numberOfExamplesElement.innerHTML = this.numberOfExamples;
             });
         });
+
+        this.elementsManager.nextImageButtonElement.addEventListener('click', () => {
+            this.loadImageWithIndexIntoCanvas(this.currentImagePreviewIndex++, this.elementsManager.imagePreviewCanvasElement);
+            this.setExampleIndicator(this.elementsManager.numberOfExamplesElement);
+        });
+
+        this.elementsManager.previousImageButtonElement.addEventListener('click', () => {
+            console.log(this.currentImagePreviewIndex);
+            this.loadImageWithIndexIntoCanvas(this.currentImagePreviewIndex--, this.elementsManager.imagePreviewCanvasElement);
+            this.setExampleIndicator(this.elementsManager.numberOfExamplesElement);
+        });
+
+        this.elementsManager.removeImageButtonElement.addEventListener('click', () => {
+            this.dataContainer.removeTensorFromBatch(this.currentImagePreviewIndex);
+            this.setExampleIndicator(this.elementsManager.numberOfExamplesElement);
+        });
+    }
+
+    setExampleIndicator(element) {
+        let indicator = this.currentImagePreviewIndex + "/" + this.dataContainer.xTrain.shape[0];
+        element.innerHTML = indicator;
+    }
+
+    loadImageWithIndexIntoCanvas(index, canvasElement) {
+        let imageData = this.dataContainer.getTensorData(index);
+        tf.browser.toPixels(tf.tensor3d(imageData), canvasElement);
     }
 
     updateTrainingProgress(batch, logs) {
