@@ -12,16 +12,20 @@ class App {
         this.videoElement = document.querySelector('#webcam-video');
         this.imagePreviewCanvasElement = document.querySelector('#image-preview-canvas');
         this.featureSelectElement = document.querySelector('#feature-select');
-        this.examplesSpanElement = document.querySelector("#examples-span");
+        this.numberOfExamplesElement = document.querySelector("#examples-span");
         this.numberOfEpochsInputElement = document.querySelector("#number-of-epochs-input");
         this.loadingBarElement = document.querySelector("#training-loading-bar");
         this.lossSpanElement = document.querySelector("#loss-span");
-        this.activationThreshold = 0.9;
+        this.saveImagesButtonElement = document.querySelector("#save-images-button");
+        this.loadImagesButtonElement = document.querySelector("#load-images-button");
+        this.removeImageButtonElement = document.querySelector("#remove-images-button");
 
+        this.activationThreshold = 0.9;
         this.numberOfExamples = 0;
         this.loadingBarProgress = 0;
         this.webcam = new Webcam(this.videoElement, 50);
-        this.data = new DataContainer();
+        this.dataContainer = new DataContainer();
+        this.dataContainer.localStorageKey = "training-data";
         this.modelStorageName = "gesture-extension-model";
         this.modelStorageDirectory = 'localstorage://' + this.modelStorageName;
         this.model = new Model(50, 50, 3, 4, this.modelStorageDirectory);
@@ -33,19 +37,19 @@ class App {
     addEventListeners() {
         this.captureImageButtonElement.addEventListener('click', () => {
             let imageTensor = this.webcam.captureImageAndGetTensor();
-            tf.browser.toPixels(imageTensor, this.imagePreviewCanvasElement)
+            tf.browser.toPixels(imageTensor, this.imagePreviewCanvasElement);
 
             let expandedImageTensor = tf.expandDims(imageTensor, 0);
             let currentFeature = this.featureSelectElement.options[this.featureSelectElement.selectedIndex].value;
             let currentFeatureTensor = tf.tidy(() => tf.oneHot(tf.tensor1d([parseInt(currentFeature)]).toInt(), 4));
 
-            this.data.add(expandedImageTensor, currentFeatureTensor);
-            this.examplesSpanElement.innerHTML = ++this.numberOfExamples;
+            this.dataContainer.add(expandedImageTensor, currentFeatureTensor);
+            this.numberOfExamplesElement.innerHTML = ++this.numberOfExamples;
         });
 
         this.trainNetworkButtonElement.addEventListener('click', async () => {
             let numberOfEpochs = parseInt(this.numberOfEpochsInputElement.value);
-            await this.model.train(this.data.xTrain, this.data.yTrain, numberOfEpochs, this.updateTrainingProgress.bind(this));
+            await this.model.train(this.dataContainer.xTrain, this.dataContainer.yTrain, numberOfEpochs, this.updateTrainingProgress.bind(this));
             this.makePredictionEverySeconds(2)
         });
 
@@ -57,6 +61,26 @@ class App {
             });
 
             console.log(Object.keys(localStorage));
+        });
+
+        this.saveImagesButtonElement.addEventListener('click', () => {
+            this.dataContainer.save();
+        });
+
+        this.loadImagesButtonElement.addEventListener('click', () => {
+            this.dataContainer.load().then(() => {
+                if (this.dataContainer.xTrain != null) {
+                    this.numberOfExamples = this.dataContainer.xTrain.shape[0];
+                    this.numberOfExamplesElement.innerHTML = this.numberOfExamples;
+                }
+            });
+        });
+
+        this.removeImageButtonElement.addEventListener('click', () => {
+            this.dataContainer.remove().then(() => {
+                this.numberOfExamples = 0;
+                this.numberOfExamplesElement.innerHTML = this.numberOfExamples;
+            });
         });
     }
 

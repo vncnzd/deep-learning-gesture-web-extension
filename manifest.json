@@ -9,8 +9,9 @@
         "open_in_tab": true
     },
     "permissions": [
-        "storage",
         "tabs",
-        "activeTab"
+        "activeTab",
+        "storage",
+        "unlimitedStorage"
     ]
 }
