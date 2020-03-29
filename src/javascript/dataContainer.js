@@ -53,7 +53,7 @@ class DataContainer {
         });
     }
 
-    remove(storageKey = this.localStorageKey) {
+    removeTensors(storageKey = this.localStorageKey) {
         return browser.storage.local.remove(storageKey).then(() => {
             this.xTrain = null;
             this.yTrain = null;
@@ -72,7 +72,46 @@ class DataContainer {
         indeces.splice(index, 1)
 
         this.xTrain = tf.tidy(() => { return tf.gather(this.xTrain, indeces); });
+        this.ytrain = tf.tidy(() => { return tf.gather(this.yTrain, indeces); });
+
+        // maybe add save images
+
         console.log("Removing tensor successful");
+    }
+
+    getTensorDataForYLabel(label, index = null) {
+        let indices = [];
+        let tensorArray = this.yTrain.arraySync();
+
+        for (let x = 0; x < tensorArray.length; x++) {
+            let labelArray = tensorArray[x];
+
+            if (labelArray.indexOf(1) == label) {
+                indices.push(x);
+            }
+        }
+
+        if (index != null) {
+            return this.xTrain.gather(indices).arraySync()[index];
+        } else {
+            return this.xTrain.gather(indices).arraySync();
+        }
+    }
+
+    getNumberOfTensorsForLabel(label) {
+        // TODO refactor this
+        let indices = [];
+        let tensorArray = this.yTrain.arraySync();
+
+        for (let x = 0; x < tensorArray.length; x++) {
+            let labelArray = tensorArray[x];
+
+            if (labelArray.indexOf(1) == label) {
+                indices.push(x);
+            }
+        }
+
+        return indices.length;
     }
 }
 
