@@ -3,29 +3,20 @@ import '../sass/style.scss';
 import Webcam from './webcam.js';
 import DataContainer from './dataContainer';
 import Model from './model';
+import ElementsManager from './elementsManager';
 
 class App {
     constructor() {
-        this.captureImageButtonElement = document.querySelector("#capture-image-button");
-        this.trainNetworkButtonElement = document.querySelector("#train-model-button");
-        this.removeModelButtonElement = document.querySelector("#remove-model-button");
-        this.videoElement = document.querySelector('#webcam-video');
-        this.imagePreviewCanvasElement = document.querySelector('#image-preview-canvas');
-        this.featureSelectElement = document.querySelector('#feature-select');
-        this.numberOfExamplesElement = document.querySelector("#examples-span");
-        this.numberOfEpochsInputElement = document.querySelector("#number-of-epochs-input");
-        this.loadingBarElement = document.querySelector("#training-loading-bar");
-        this.lossSpanElement = document.querySelector("#loss-span");
-        this.saveImagesButtonElement = document.querySelector("#save-images-button");
-        this.loadImagesButtonElement = document.querySelector("#load-images-button");
-        this.removeImageButtonElement = document.querySelector("#remove-images-button");
-
         this.activationThreshold = 0.9;
         this.numberOfExamples = 0;
         this.loadingBarProgress = 0;
-        this.webcam = new Webcam(this.videoElement, 50);
+
+        this.elementsManager = new ElementsManager();
+        this.webcam = new Webcam(this.elementsManager.videoElement, 50);
+
         this.dataContainer = new DataContainer();
         this.dataContainer.localStorageKey = "training-data";
+        
         this.modelStorageName = "gesture-extension-model";
         this.modelStorageDirectory = 'localstorage://' + this.modelStorageName;
         this.model = new Model(50, 50, 3, 4, this.modelStorageDirectory);
@@ -35,25 +26,25 @@ class App {
     }
 
     addEventListeners() {
-        this.captureImageButtonElement.addEventListener('click', () => {
+        this.elementsManager.captureImageButtonElement.addEventListener('click', () => {
             let imageTensor = this.webcam.captureImageAndGetTensor();
-            tf.browser.toPixels(imageTensor, this.imagePreviewCanvasElement);
+            tf.browser.toPixels(imageTensor, this.elementsManager.imagePreviewCanvasElement);
 
             let expandedImageTensor = tf.expandDims(imageTensor, 0);
-            let currentFeature = this.featureSelectElement.options[this.featureSelectElement.selectedIndex].value;
+            let currentFeature = this.elementsManager.featureSelectElement.options[this.elementsManager.featureSelectElement.selectedIndex].value;
             let currentFeatureTensor = tf.tidy(() => tf.oneHot(tf.tensor1d([parseInt(currentFeature)]).toInt(), 4));
 
             this.dataContainer.add(expandedImageTensor, currentFeatureTensor);
-            this.numberOfExamplesElement.innerHTML = ++this.numberOfExamples;
+            this.elementsManager.numberOfExamplesElement.innerHTML = ++this.numberOfExamples;
         });
 
-        this.trainNetworkButtonElement.addEventListener('click', async () => {
-            let numberOfEpochs = parseInt(this.numberOfEpochsInputElement.value);
+        this.elementsManager.trainNetworkButtonElement.addEventListener('click', async () => {
+            let numberOfEpochs = parseInt(this.elementsManager.numberOfEpochsInputElement.value);
             await this.model.train(this.dataContainer.xTrain, this.dataContainer.yTrain, numberOfEpochs, this.updateTrainingProgress.bind(this));
             this.makePredictionEverySeconds(2)
         });
 
-        this.removeModelButtonElement.addEventListener('click', () => {
+        this.elementsManager.removeModelButtonElement.addEventListener('click', () => {
             Object.keys(localStorage).forEach(key => {
                 if (key.includes(this.modelStorageName)) {
                     localStorage.removeItem(key);
@@ -63,23 +54,23 @@ class App {
             console.log(Object.keys(localStorage));
         });
 
-        this.saveImagesButtonElement.addEventListener('click', () => {
+        this.elementsManager.saveImagesButtonElement.addEventListener('click', () => {
             this.dataContainer.save();
         });
 
-        this.loadImagesButtonElement.addEventListener('click', () => {
+        this.elementsManager.loadImagesButtonElement.addEventListener('click', () => {
             this.dataContainer.load().then(() => {
                 if (this.dataContainer.xTrain != null) {
                     this.numberOfExamples = this.dataContainer.xTrain.shape[0];
-                    this.numberOfExamplesElement.innerHTML = this.numberOfExamples;
+                    this.elementsManager.numberOfExamplesElement.innerHTML = this.numberOfExamples;
                 }
             });
         });
 
-        this.removeImageButtonElement.addEventListener('click', () => {
+        this.elementsManager.removeImageButtonElement.addEventListener('click', () => {
             this.dataContainer.remove().then(() => {
                 this.numberOfExamples = 0;
-                this.numberOfExamplesElement.innerHTML = this.numberOfExamples;
+                this.elementsManager.numberOfExamplesElement.innerHTML = this.numberOfExamples;
             });
         });
     }
@@ -87,11 +78,11 @@ class App {
     updateTrainingProgress(batch, logs) {
         this.lossSpanElement.innerHTML = logs.loss.toFixed(7);
 
-        let numberOfEpochs = parseInt(this.numberOfEpochsInputElement.value);
+        let numberOfEpochs = parseInt(this.elementsManager.numberOfEpochsInputElement.value);
         let progressStep = 100 / numberOfEpochs;
 
         this.loadingBarProgress += progressStep;
-        this.loadingBarElement.style.width = this.loadingBarProgress + "%";
+        this.elementsManager.loadingBarElement.style.width = this.loadingBarProgress + "%";
     }
 
     makePredictionEverySeconds(numberOfSeconds) {
