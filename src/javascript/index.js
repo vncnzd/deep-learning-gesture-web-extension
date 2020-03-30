@@ -14,7 +14,7 @@ class App {
         this.currentImagePreviewIndex = 0;
         this.shouldMakePredictions = false;
         
-        this.loadShouldMakePredictions();
+        this.loadShouldMakePredictions().then(this.setPredictionButtonsColors.bind(this));
         this.loadActivationThreshold();
 
         this.elementsManager = new ElementsManager();
@@ -31,6 +31,7 @@ class App {
         this.addEventListeners();
 
         this.makePredictionEverySeconds(1);
+        this.setPredictionButtonsColors();
     }
 
     addEventListeners() {
@@ -58,9 +59,20 @@ class App {
         this.shouldMakePredictions = await LocalStorage.load("shouldMakePredictions");
     }
 
+    setPredictionButtonsColors() {
+        if (this.shouldMakePredictions) {
+            this.elementsManager.startButtonElement.classList.remove("background-success");
+            this.elementsManager.stopButtonElement.classList.add("background-alert");
+        } else {
+            this.elementsManager.startButtonElement.classList.add("background-success");
+            this.elementsManager.stopButtonElement.classList.remove("background-alert");
+        }
+    }
+
     setShouldMakePredictions(shouldMakePredictions) {
         this.shouldMakePredictions = shouldMakePredictions;
         LocalStorage.save("shouldMakePredictions", this.shouldMakePredictions);
+        this.setPredictionButtonsColors();
     }
 
     async loadActivationThreshold() {
