@@ -11,19 +11,23 @@ class App {
         this.numberOfExamples = 0;
         this.loadingBarProgress = 0;
         this.currentImagePreviewIndex = 0;
+        this.shouldMakePredictions = false;
+        this.loadShouldMakePredictions();
 
         this.elementsManager = new ElementsManager();
         this.webcam = new Webcam(this.elementsManager.videoElement, 50);
 
         this.dataContainer = new DataContainer();
         this.dataContainer.localStorageKey = "training-data";
-        this.dataContainer.load().then(this.changeImageStack.bind(this));
+        this.dataContainer.load().then(this.changeImageStack.bind(this)).catch((error) => { console.log(error); });
         
         this.modelStorageName = "gesture-extension-model";
         this.model = new Model(50, 50, 3, 4, this.modelStorageName);
         this.model.load(this.model.storageDirectory);
 
         this.addEventListeners();
+
+        this.makePredictionEverySeconds(1);
     }
 
     addEventListeners() {
@@ -31,7 +35,6 @@ class App {
         this.elementsManager.trainNetworkButtonElement.addEventListener('click', this.trainModel.bind(this));
         this.elementsManager.removeModelButtonElement.addEventListener('click', this.removeModelFromStorage.bind(this));
         this.elementsManager.saveImagesButtonElement.addEventListener('click', () => { this.dataContainer.save(); });
-        this.elementsManager.loadImagesButtonElement.addEventListener('click', this.loadDataContainer.bind(this));
         this.elementsManager.removeImagesButtonElement.addEventListener('click', this.removeAllImageTensors.bind(this));
 
         this.elementsManager.nextImageButtonElement.addEventListener('click', () => { this.cycleThroughImages(1); });
@@ -39,6 +42,28 @@ class App {
 
         this.elementsManager.removeImageButtonElement.addEventListener('click', this.removeCurrentImage.bind(this));
         this.elementsManager.featureSelectElement.addEventListener('input', this.changeImageStack.bind(this));
+
+        this.elementsManager.startButtonElement.addEventListener('click', () => { this.makePredictions(true); });
+        this.elementsManager.stopButtonElement.addEventListener('click', () => { this.makePredictions(false); });
+        this.elementsManager.activationThresholdInputElement.addEventListener('input', (e) => { 
+            this.activationThreshold = parseFloat(e.target.value); 
+        });        
+    }
+
+    async loadShouldMakePredictions() {
+        let results = await browser.storage.local.get("shouldMakePredictions");
+        console.log(results);
+
+        if (results["shouldMakePredictions"] != null) {
+            this.shouldMakePredictions = results["shouldMakePredictions"];
+        }
+    }
+
+    makePredictions(shouldMakePredictions) {
+        this.shouldMakePredictions = shouldMakePredictions;
+        browser.storage.local.set({ shouldMakePredictions: this.shouldMakePredictions }).then(() => {
+            console.log("Start making predictions: " + this.shouldMakePredictions);
+        });
     }
 
     loadDataContainer() {
@@ -115,13 +140,25 @@ class App {
 
     setExampleIndicator(label, element) {
         let numberOfTensors = this.dataContainer.getNumberOfTensorsForLabel(label);
-        let indicator = (this.currentImagePreviewIndex + 1) + "/" + numberOfTensors;
-        element.innerHTML = indicator;
+        if (numberOfTensors > 0) {
+            let indicator = (this.currentImagePreviewIndex + 1) + "/" + numberOfTensors;
+            element.innerHTML = indicator;
+        } else {
+            element.innerHTML = "";
+        }
     }
 
     loadImageWithIndexAndLabelIntoCanvas(index, label, canvasElement) {
         let imageData = this.dataContainer.getTensorDataForYLabel(label, index);
-        tf.browser.toPixels(tf.tensor3d(imageData), canvasElement);
+        if (imageData != null) {
+            tf.browser.toPixels(tf.tensor3d(imageData), canvasElement);
+        } else {
+            this.clearCanvas(canvasElement);
+        }
+    }
+
+    clearCanvas(canvasElement) {
+        canvasElement.getContext("2d").clearRect(0, 0, canvasElement.width, canvasElement.height);
     }
 
     updateTrainingProgress(batch, logs) {
@@ -140,6 +177,8 @@ class App {
     }
 
     makePrediction() {
+        if (!this.shouldMakePredictions) return;
+
         let imageTensor = this.webcam.captureImageAndConvertToTensor();
         let resultTensor = tf.tidy(() => { return this.model.predict(imageTensor.expandDims(0)) });
 

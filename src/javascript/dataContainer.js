@@ -32,7 +32,7 @@ class DataContainer {
 
                 console.log("Loading training data successful");
             } else {
-                console.log("No saved training data found for this key: " + storageKey);
+                throw("No saved training data found for this key: " + storageKey);
             }
         });
     }

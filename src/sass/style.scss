@@ -1,7 +1,9 @@
 // Variables
 
 $main-color: #007bff;
-$dark-color :#343a40;
+$dark-color: #343a40;
+$alert-color: #c43f3f;
+$success-color: #469b46;
 $border: 1px solid rgba($color: #000000, $alpha: 0.15);
 
 // Elements
@@ -62,6 +64,10 @@ main {
     background-color: $main-color;
 }
 
+.background-success {
+    background-color: $success-color;
+}
+
 .grid-container {
     display: grid;
     width: 100%;
@@ -101,11 +107,11 @@ main {
 }
 
 .background-alert {
-    background-color: #c43f3f;
+    background-color: $alert-color;
 }
 
 .button.background-alert:hover {
-    background-color: darken($color: #c43f3f, $amount: 4);
+    background-color: darken($color: $alert-color, $amount: 4);
 }
 
 .button {
