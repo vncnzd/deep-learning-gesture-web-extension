@@ -1,20 +1,19 @@
 import * as tf from '@tensorflow/tfjs';
-import { cos } from '@tensorflow/tfjs';
 
 class Webcam {
     constructor(videoElement, imageTensorSize) {
         this.videoElement = videoElement;
         this.imageTensorSize = imageTensorSize;
-        this.setup();
+        this.setup(this.videoElement);
 	}
 
-    setup() {
+    setup(videoElement) {
         navigator.mediaDevices.getUserMedia({ video: true }).then((stream) => {
-            this.videoElement.srcObject = stream;
+            videoElement.srcObject = stream;
         });
     }
 
-    captureImageAndGetTensor() {
+    captureImageAndConvertToTensor() {
         return tf.tidy(() => {
             let imageTensor = tf.browser.fromPixels(this.videoElement);
             let quadraticImageTensor = this.sliceImageTensorToQuadratic(imageTensor);
@@ -24,13 +23,15 @@ class Webcam {
             let expandedImageTensor = quadraticImageTensor.expandDims(0);
             let resizedImageTensor = tf.image.resizeBilinear(expandedImageTensor, [this.imageTensorSize, this.imageTensorSize]);
             let normalizedImageTensor = tf.tidy(() => resizedImageTensor.toFloat().div(tf.scalar(255)));
+            let squeezedImageTensor = tf.squeeze(normalizedImageTensor);
 
             tf.dispose(imageTensor);
             tf.dispose(quadraticImageTensor);
             tf.dispose(expandedImageTensor);
             tf.dispose(resizedImageTensor);
+            tf.dispose(normalizedImageTensor);
 
-            return tf.squeeze(normalizedImageTensor);
+            return squeezedImageTensor;
         });
     }
 
