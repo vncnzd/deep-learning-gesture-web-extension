@@ -14,11 +14,10 @@ class DataContainer {
         } else {
             let oldXTrain = this.xTrain;
             this.xTrain = tf.keep(oldXTrain.concat(x, 0));
+            oldXTrain.dispose();
       
             let oldYTrain = this.yTrain;
             this.yTrain = tf.keep(oldYTrain.concat(y, 0));
-      
-            oldXTrain.dispose();
             oldYTrain.dispose();
         }
     }
@@ -27,11 +26,13 @@ class DataContainer {
         return browser.storage.local.get(storageKey).then((results) => {
             if (results[storageKey] != null) {
                 let data = results[storageKey];
+
                 this.xTrain = tf.tensor4d(Object.values(data.xTrain.data), data.xTrain.shape);
                 this.yTrain = tf.tensor2d(Object.values(data.yTrain.data), data.yTrain.shape);
+
                 console.log("Loading training data successful");
             } else {
-                throw "No storage result for this key: " + storageKey;
+                console.log("No saved training data found for this key: " + storageKey);
             }
         });
     }
@@ -53,7 +54,7 @@ class DataContainer {
         });
     }
 
-    removeTensors(storageKey = this.localStorageKey) {
+    removeAllTensorsFromStorage(storageKey = this.localStorageKey) {
         return browser.storage.local.remove(storageKey).then(() => {
             this.xTrain = null;
             this.yTrain = null;
@@ -65,18 +66,34 @@ class DataContainer {
         return this.xTrain.arraySync()[index];
     }
 
-    removeTensorFromBatch(index) {
-        let numberOfTensors = this.xTrain.shape[0];
-        console.log(numberOfTensors);
-        let indeces = Array.from(Array(numberOfTensors).keys())
-        indeces.splice(index, 1)
+    removeTensorFromBatch(label, labelIndex) {
+        let tensorArray = this.yTrain.arraySync();
+        let indexOfLabel = -1;
 
-        this.xTrain = tf.tidy(() => { return tf.gather(this.xTrain, indeces); });
-        this.ytrain = tf.tidy(() => { return tf.gather(this.yTrain, indeces); });
+        for (let index = 0; index < tensorArray.length; index++) {
+            let labelArray = tensorArray[index];
 
-        // maybe add save images
+            if (labelArray.indexOf(1) == label) {
+                indexOfLabel++;
 
-        console.log("Removing tensor successful");
+                if (indexOfLabel == labelIndex) {
+                    let numberOfTensors = this.xTrain.shape[0];
+
+                    if (numberOfTensors != this.yTrain.shape[0]) {
+                        console.log("yTrain and xTrain have a different number of tensors");
+                    }
+
+                    let indeces = Array.from(Array(numberOfTensors).keys());
+                    indeces.splice(index, 1);
+
+                    this.xTrain = tf.tidy(() => { return tf.gather(this.xTrain, indeces); });
+                    this.yTrain = tf.tidy(() => { return tf.gather(this.yTrain, indeces); });
+                    console.log("Removing tensor successful");
+
+                    return;
+                }
+            }
+        }
     }
 
     getTensorDataForYLabel(label, index = null) {
