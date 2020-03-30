@@ -17,89 +17,96 @@ class App {
 
         this.dataContainer = new DataContainer();
         this.dataContainer.localStorageKey = "training-data";
+        this.dataContainer.load().then(this.changeImageStack.bind(this));
         
         this.modelStorageName = "gesture-extension-model";
-        this.modelStorageDirectory = 'localstorage://' + this.modelStorageName;
-        this.model = new Model(50, 50, 3, 4, this.modelStorageDirectory);
+        this.model = new Model(50, 50, 3, 4, this.modelStorageName);
         this.model.load(this.model.storageDirectory);
 
         this.addEventListeners();
     }
 
     addEventListeners() {
-        this.elementsManager.captureImageButtonElement.addEventListener('click', () => {
-            let imageTensor = this.webcam.captureImageAndGetTensor();
-            tf.browser.toPixels(imageTensor, this.elementsManager.imagePreviewCanvasElement);
+        this.elementsManager.captureImageButtonElement.addEventListener('click', this.captureImage.bind(this));
+        this.elementsManager.trainNetworkButtonElement.addEventListener('click', this.trainModel.bind(this));
+        this.elementsManager.removeModelButtonElement.addEventListener('click', this.removeModelFromStorage.bind(this));
+        this.elementsManager.saveImagesButtonElement.addEventListener('click', () => { this.dataContainer.save(); });
+        this.elementsManager.loadImagesButtonElement.addEventListener('click', this.loadDataContainer.bind(this));
+        this.elementsManager.removeImagesButtonElement.addEventListener('click', this.removeAllImageTensors.bind(this));
 
-            let expandedImageTensor = tf.expandDims(imageTensor, 0);
-            let currentFeatureLabel = this.getCurrentFeatureLabel();
-            let currentFeatureTensor = tf.tidy(() => tf.oneHot(tf.tensor1d([parseInt(currentFeatureLabel)]).toInt(), 4));
-            this.dataContainer.add(expandedImageTensor, currentFeatureTensor);
+        this.elementsManager.nextImageButtonElement.addEventListener('click', () => { this.cycleThroughImages(1); });
+        this.elementsManager.previousImageButtonElement.addEventListener('click', () => { this.cycleThroughImages(-1); });
 
-            this.currentImagePreviewIndex = this.dataContainer.getNumberOfTensorsForLabel(currentFeatureLabel) - 1;
-            this.setExampleIndicator(currentFeatureLabel, this.elementsManager.numberOfExamplesElement);
+        this.elementsManager.removeImageButtonElement.addEventListener('click', this.removeCurrentImage.bind(this));
+        this.elementsManager.featureSelectElement.addEventListener('input', this.changeImageStack.bind(this));
+    }
+
+    loadDataContainer() {
+        this.dataContainer.load().then(() => {
+            if (this.dataContainer.xTrain != null) {
+                let currentFeatureLabel = this.getCurrentFeatureLabel();
+                this.loadImageWithIndexAndLabelIntoCanvas(this.currentImagePreviewIndex, currentFeatureLabel, this.elementsManager.imagePreviewCanvasElement);
+                this.setExampleIndicator(currentFeatureLabel, this.elementsManager.numberOfExamplesElement);
+            }
         });
+    }
 
-        this.elementsManager.trainNetworkButtonElement.addEventListener('click', async () => {
-            let numberOfEpochs = parseInt(this.elementsManager.numberOfEpochsInputElement.value);
-            await this.model.train(this.dataContainer.xTrain, this.dataContainer.yTrain, numberOfEpochs, this.updateTrainingProgress.bind(this));
-            this.makePredictionEverySeconds(2);
-        });
+    removeCurrentImage() {
+        let currentFeatureLabel = this.getCurrentFeatureLabel();
+        this.dataContainer.removeTensorFromBatch(currentFeatureLabel, this.currentImagePreviewIndex);
+        this.cycleThroughImages(-1);
+        this.setExampleIndicator(currentFeatureLabel, this.elementsManager.numberOfExamplesElement);
+    }
 
-        this.elementsManager.removeModelButtonElement.addEventListener('click', () => {
-            Object.keys(localStorage).forEach(key => {
-                if (key.includes(this.modelStorageName)) {
-                    localStorage.removeItem(key);
-                }
-            });
+    changeImageStack() {
+        let currentFeatureLabel = this.getCurrentFeatureLabel();
+        this.currentImagePreviewIndex = 0;
+        this.loadImageWithIndexAndLabelIntoCanvas(0, currentFeatureLabel, this.elementsManager.imagePreviewCanvasElement);
+        this.setExampleIndicator(currentFeatureLabel, this.elementsManager.numberOfExamplesElement);
+    }
 
-            console.log(Object.keys(localStorage));
-        });
+    cycleThroughImages(step) {
+        let currentFeatureLabel = this.getCurrentFeatureLabel();
+        this.currentImagePreviewIndex += step;
 
-        this.elementsManager.saveImagesButtonElement.addEventListener('click', () => {
-            this.dataContainer.save();
-        });
-
-        this.elementsManager.loadImagesButtonElement.addEventListener('click', () => {
-            this.dataContainer.load().then(() => {
-                if (this.dataContainer.xTrain != null) {
-                    let currentFeatureLabel = this.getCurrentFeatureLabel();
-                    this.loadImageWithIndexAndLabelIntoCanvas(this.currentImagePreviewIndex, currentFeatureLabel, this.elementsManager.imagePreviewCanvasElement);
-                    this.setExampleIndicator(currentFeatureLabel, this.elementsManager.numberOfExamplesElement);
-                }
-            });
-        });
-
-        this.elementsManager.removeImagesButtonElement.addEventListener('click', () => {
-            this.dataContainer.removeTensors().then(() => {
-                console.log("Removing all tensors successful");
-            });
-        });
-
-        this.elementsManager.nextImageButtonElement.addEventListener('click', () => {
-            let currentFeatureLabel = this.getCurrentFeatureLabel();
-            this.loadImageWithIndexAndLabelIntoCanvas(++this.currentImagePreviewIndex, currentFeatureLabel, this.elementsManager.imagePreviewCanvasElement);
-            this.setExampleIndicator(currentFeatureLabel, this.elementsManager.numberOfExamplesElement);
-        });
-
-        this.elementsManager.previousImageButtonElement.addEventListener('click', () => {
-            let currentFeatureLabel = this.getCurrentFeatureLabel();
-            this.loadImageWithIndexAndLabelIntoCanvas(--this.currentImagePreviewIndex, currentFeatureLabel, this.elementsManager.imagePreviewCanvasElement);
-            this.setExampleIndicator(currentFeatureLabel, this.elementsManager.numberOfExamplesElement);
-        });
-
-        this.elementsManager.removeImageButtonElement.addEventListener('click', () => {
-            let currentFeatureLabel = this.getCurrentFeatureLabel();
-            this.dataContainer.removeTensorFromBatch(this.currentImagePreviewIndex);
-            this.setExampleIndicator(currentFeatureLabel, this.elementsManager.numberOfExamplesElement);
-        });
-
-        this.elementsManager.featureSelectElement.addEventListener('input', () => {
-            let currentFeatureLabel = this.getCurrentFeatureLabel();
+        if (this.currentImagePreviewIndex < 0) {
             this.currentImagePreviewIndex = 0;
-            this.loadImageWithIndexAndLabelIntoCanvas(0, currentFeatureLabel, this.elementsManager.imagePreviewCanvasElement);
-            this.setExampleIndicator(currentFeatureLabel, this.elementsManager.numberOfExamplesElement);
+        } else if (this.currentImagePreviewIndex >= this.dataContainer.getNumberOfTensorsForLabel(currentFeatureLabel)) {
+            // Refactor this, since getNumberOfTensorsForLabel is an expensive method.
+            this.currentImagePreviewIndex = this.dataContainer.getNumberOfTensorsForLabel(currentFeatureLabel) - 1;
+        }
+
+        this.loadImageWithIndexAndLabelIntoCanvas(this.currentImagePreviewIndex, currentFeatureLabel, this.elementsManager.imagePreviewCanvasElement);
+        this.setExampleIndicator(currentFeatureLabel, this.elementsManager.numberOfExamplesElement);
+    }
+
+    removeAllImageTensors() {
+        this.dataContainer.removeAllTensorsFromStorage().then(() => {
+            console.log("Removing all tensors successful");
         });
+    }
+
+    captureImage() {
+        let imageTensor = this.webcam.captureImageAndConvertToTensor();
+        tf.browser.toPixels(imageTensor, this.elementsManager.imagePreviewCanvasElement);
+
+        let expandedImageTensor = tf.expandDims(imageTensor, 0);
+        let currentFeatureLabel = this.getCurrentFeatureLabel();
+        let currentFeatureTensor = tf.tidy(() => tf.oneHot(tf.tensor1d([parseInt(currentFeatureLabel)]).toInt(), 4));
+        this.dataContainer.add(expandedImageTensor, currentFeatureTensor);
+
+        this.currentImagePreviewIndex = this.dataContainer.getNumberOfTensorsForLabel(currentFeatureLabel) - 1;
+        this.setExampleIndicator(currentFeatureLabel, this.elementsManager.numberOfExamplesElement);
+    }
+
+    removeModelFromStorage() {
+        this.model.removeFromStorage();
+    }
+
+    async trainModel() {
+        let numberOfEpochs = parseInt(this.elementsManager.numberOfEpochsInputElement.value);
+        await this.model.train(this.dataContainer.xTrain, this.dataContainer.yTrain, numberOfEpochs, this.updateTrainingProgress.bind(this));
+        this.makePredictionEverySeconds(2);
     }
 
     getCurrentFeatureLabel() {
@@ -118,7 +125,7 @@ class App {
     }
 
     updateTrainingProgress(batch, logs) {
-        this.lossSpanElement.innerHTML = logs.loss.toFixed(7);
+        this.elementsManager.lossSpanElement.innerHTML = logs.loss.toFixed(7);
 
         let numberOfEpochs = parseInt(this.elementsManager.numberOfEpochsInputElement.value);
         let progressStep = 100 / numberOfEpochs;
@@ -133,7 +140,7 @@ class App {
     }
 
     makePrediction() {
-        let imageTensor = this.webcam.captureImageAndGetTensor();
+        let imageTensor = this.webcam.captureImageAndConvertToTensor();
         let resultTensor = tf.tidy(() => { return this.model.predict(imageTensor.expandDims(0)) });
 
         this.evaluatePredictionTensor(resultTensor);

@@ -99,7 +99,8 @@ class Model {
                 localStorage.removeItem(key);
             }
         });
-        console.log(localStorage);
+
+        console.log("Removing model successful");
     }
 
     predict(imageTensor) {
