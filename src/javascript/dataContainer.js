@@ -1,4 +1,5 @@
 import * as tf from '@tensorflow/tfjs';
+import LocalStorage from './localStorage';
 
 class DataContainer {
     constructor() {
@@ -23,17 +24,9 @@ class DataContainer {
     }
 
     load(storageKey = this.localStorageKey) {
-        return browser.storage.local.get(storageKey).then((results) => {
-            if (results[storageKey] != null) {
-                let data = results[storageKey];
-
-                this.xTrain = tf.tensor4d(Object.values(data.xTrain.data), data.xTrain.shape);
-                this.yTrain = tf.tensor2d(Object.values(data.yTrain.data), data.yTrain.shape);
-
-                console.log("Loading training data successful");
-            } else {
-                throw("No saved training data found for this key: " + storageKey);
-            }
+        return LocalStorage.load(storageKey).then((data) => {
+            this.xTrain = tf.tensor4d(Object.values(data.xTrain.data), data.xTrain.shape);
+            this.yTrain = tf.tensor2d(Object.values(data.yTrain.data), data.yTrain.shape);
         });
     }
 
@@ -49,16 +42,13 @@ class DataContainer {
             } 
         };
 
-        return browser.storage.local.set({ [storageKey]: data }).then(() => {
-            console.log("Saving training data successful");
-        });
+        return LocalStorage.save(storageKey, data);
     }
 
     removeAllTensorsFromStorage(storageKey = this.localStorageKey) {
-        return browser.storage.local.remove(storageKey).then(() => {
+        return LocalStorage.delete(storageKey).then(() => {
             this.xTrain = null;
             this.yTrain = null;
-            console.log("Removing of stored images successful");
         });
     }
 

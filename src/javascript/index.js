@@ -4,6 +4,7 @@ import Webcam from './webcam.js';
 import DataContainer from './dataContainer';
 import Model from './model';
 import ElementsManager from './elementsManager';
+import LocalStorage from './localStorage';
 
 class App {
     constructor() {
@@ -12,7 +13,9 @@ class App {
         this.loadingBarProgress = 0;
         this.currentImagePreviewIndex = 0;
         this.shouldMakePredictions = false;
+        
         this.loadShouldMakePredictions();
+        this.loadActivationThreshold();
 
         this.elementsManager = new ElementsManager();
         this.webcam = new Webcam(this.elementsManager.videoElement, 50);
@@ -43,27 +46,26 @@ class App {
         this.elementsManager.removeImageButtonElement.addEventListener('click', this.removeCurrentImage.bind(this));
         this.elementsManager.featureSelectElement.addEventListener('input', this.changeImageStack.bind(this));
 
-        this.elementsManager.startButtonElement.addEventListener('click', () => { this.makePredictions(true); });
-        this.elementsManager.stopButtonElement.addEventListener('click', () => { this.makePredictions(false); });
+        this.elementsManager.startButtonElement.addEventListener('click', () => { this.setShouldMakePredictions(true); });
+        this.elementsManager.stopButtonElement.addEventListener('click', () => { this.setShouldMakePredictions(false); });
         this.elementsManager.activationThresholdInputElement.addEventListener('input', (e) => { 
-            this.activationThreshold = parseFloat(e.target.value); 
+            this.activationThreshold = parseFloat(e.target.value);
+            LocalStorage.save("activationThreshold", this.activationThreshold);
         });        
     }
 
     async loadShouldMakePredictions() {
-        let results = await browser.storage.local.get("shouldMakePredictions");
-        console.log(results);
-
-        if (results["shouldMakePredictions"] != null) {
-            this.shouldMakePredictions = results["shouldMakePredictions"];
-        }
+        this.shouldMakePredictions = await LocalStorage.load("shouldMakePredictions");
     }
 
-    makePredictions(shouldMakePredictions) {
+    setShouldMakePredictions(shouldMakePredictions) {
         this.shouldMakePredictions = shouldMakePredictions;
-        browser.storage.local.set({ shouldMakePredictions: this.shouldMakePredictions }).then(() => {
-            console.log("Start making predictions: " + this.shouldMakePredictions);
-        });
+        LocalStorage.save("shouldMakePredictions", this.shouldMakePredictions);
+    }
+
+    async loadActivationThreshold() {
+        this.activationThreshold = await LocalStorage.load("activationThreshold");
+        this.elementsManager.activationThresholdInputElement.value = this.activationThreshold;
     }
 
     loadDataContainer() {
@@ -130,8 +132,7 @@ class App {
 
     async trainModel() {
         let numberOfEpochs = parseInt(this.elementsManager.numberOfEpochsInputElement.value);
-        await this.model.train(this.dataContainer.xTrain, this.dataContainer.yTrain, numberOfEpochs, this.updateTrainingProgress.bind(this));
-        this.makePredictionEverySeconds(2);
+        this.model.train(this.dataContainer.xTrain, this.dataContainer.yTrain, numberOfEpochs, this.updateTrainingProgress.bind(this));
     }
 
     getCurrentFeatureLabel() {
