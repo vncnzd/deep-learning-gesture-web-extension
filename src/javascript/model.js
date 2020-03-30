@@ -1,13 +1,14 @@
 import * as tf from '@tensorflow/tfjs';
 
 class Model {
-    constructor(imageWidth, imageHeight, imageChannels, numberOfOutputClasses, storageDirectory) {
+    constructor(imageWidth, imageHeight, imageChannels, numberOfOutputClasses, storageName) {
         this.imageWidth = imageWidth;
         this.imageHeight = imageHeight;
         this.imageChannels = imageChannels;
         this.numberOfOutputClasses = numberOfOutputClasses;
         this.model = tf.sequential();
-        this.storageDirectory = storageDirectory;
+        this.storageName = storageName;
+        this.storageDirectory = 'localstorage://' + this.storageName;
 
         this.addFirstConvolutionalLayer(this.model);
         this.addFirstMaxPoolingLayer(this.model);
@@ -76,19 +77,29 @@ class Model {
             }
         });
 
-        this.model.save(this.storageDirectory);
+        this.model.save(this.storageDirectory).then(() => {
+            console.log("Model was saved");
+        });
     }
 
     async load(storageDirectory) {
-        let model = await tf.loadLayersModel(storageDirectory).then(() => { 
-            console.log("Loading model successful"); 
-        }).catch(() => {
-            console.log("No model to load");
+        let model = await tf.loadLayersModel(this.storageDirectory).catch(() => {
+            console.log("No model is saved which could be loaded");
         });
         
         if (model != null) {
             this.model = model;
+            console.log("Loading model successful");
         }
+    }
+
+    removeFromStorage(storageName = this.storageName) {
+        Object.keys(localStorage).forEach(key => {
+            if (key.includes(storageName)) {
+                localStorage.removeItem(key);
+            }
+        });
+        console.log(localStorage);
     }
 
     predict(imageTensor) {
