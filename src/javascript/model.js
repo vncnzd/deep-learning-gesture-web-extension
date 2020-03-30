@@ -89,6 +89,7 @@ class Model {
         
         if (model != null) {
             this.model = model;
+            this.compileModel(this.model);
             console.log("Loading model successful");
         }
     }
