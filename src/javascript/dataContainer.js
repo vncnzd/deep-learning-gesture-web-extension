@@ -78,8 +78,7 @@ class DataContainer {
 
                     this.xTrain = tf.tidy(() => { return tf.gather(this.xTrain, indeces); });
                     this.yTrain = tf.tidy(() => { return tf.gather(this.yTrain, indeces); });
-                    console.log("Removing tensor successful");
-
+                    
                     return;
                 }
             }
@@ -106,7 +105,10 @@ class DataContainer {
     }
 
     getNumberOfTensorsForLabel(label) {
-        // TODO refactor this
+        if (this.yTrain == null) {
+            return 0;
+        }
+
         let indices = [];
         let tensorArray = this.yTrain.arraySync();
 

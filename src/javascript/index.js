@@ -8,24 +8,28 @@ import LocalStorage from './localStorage';
 
 class App {
     constructor() {
+        this.elementsManager = new ElementsManager();
         this.activationThreshold = 0.9;
-        this.numberOfExamples = 0;
         this.loadingBarProgress = 0;
         this.currentImagePreviewIndex = 0;
         this.shouldMakePredictions = false;
+        this.imageSize = 80;
         
         this.loadShouldMakePredictions().then(this.setPredictionButtonsColors.bind(this));
         this.loadActivationThreshold();
 
-        this.elementsManager = new ElementsManager();
-        this.webcam = new Webcam(this.elementsManager.videoElement, 50);
+        this.webcam = new Webcam(this.elementsManager.videoElement, this.imageSize);
+        this.features = this.elementsManager.getOptionsOfSelectElement(this.elementsManager.featureSelectElement);
 
         this.dataContainer = new DataContainer();
         this.dataContainer.localStorageKey = "training-data";
-        this.dataContainer.load().then(this.changeImageStack.bind(this)).catch((error) => { console.log(error); });
+        this.dataContainer.load().then(this.changeImageStack.bind(this)).catch((error) => { 
+            console.log(error);
+            this.elementsManager.setMessage(error);
+        });
         
         this.modelStorageName = "gesture-extension-model";
-        this.model = new Model(50, 50, 3, 4, this.modelStorageName);
+        this.model = new Model(this.imageSize, this.imageSize, 3, Object.keys(this.features).length, this.modelStorageName);
         this.model.load(this.model.storageDirectory);
 
         this.addEventListeners();
@@ -95,6 +99,8 @@ class App {
         this.dataContainer.removeTensorFromBatch(currentFeatureLabel, this.currentImagePreviewIndex);
         this.cycleThroughImages(-1);
         this.setExampleIndicator(currentFeatureLabel, this.elementsManager.numberOfExamplesElement);
+        console.log("Removing tensor successful");
+        this.elementsManager.setMessage("Removing tensor successful");
     }
 
     changeImageStack() {
@@ -121,7 +127,10 @@ class App {
 
     removeAllImageTensors() {
         this.dataContainer.removeAllTensorsFromStorage().then(() => {
+            this.clearCanvas(this.elementsManager.imagePreviewCanvasElement);
+            this.setExampleIndicator(this.currentFeatureLabel, this.elementsManager.numberOfExamplesElement)
             console.log("Removing all tensors successful");
+            this.elementsManager.setMessage("Removing all tensors successful");
         });
     }
 
@@ -153,6 +162,7 @@ class App {
 
     setExampleIndicator(label, element) {
         let numberOfTensors = this.dataContainer.getNumberOfTensorsForLabel(label);
+
         if (numberOfTensors > 0) {
             let indicator = (this.currentImagePreviewIndex + 1) + "/" + numberOfTensors;
             element.innerHTML = indicator;
@@ -194,6 +204,7 @@ class App {
 
         let imageTensor = this.webcam.captureImageAndConvertToTensor();
         let resultTensor = tf.tidy(() => { return this.model.predict(imageTensor.expandDims(0)) });
+        this.listPrediction(resultTensor);
 
         this.evaluatePredictionTensor(resultTensor);
 
@@ -201,14 +212,24 @@ class App {
         tf.dispose(resultTensor);
     }
 
+    listPrediction(prediction) {
+        this.elementsManager.predictionList.innerHTML= "";
+        let predictionArray = prediction.arraySync()[0];
+
+        Object.keys(predictionArray).forEach(key => {
+            let feature = this.features[key];
+            let probability = predictionArray[key].toFixed(5);
+            let listElement = document.createElement('li');
+            listElement.appendChild(document.createTextNode(feature + ": " + probability));
+            this.elementsManager.predictionList.appendChild(listElement);
+        });
+    }
+
     evaluatePredictionTensor(predictionTensor) {
         let maxPredictionValue = predictionTensor.max().dataSync()[0];
-        console.log("Max prediction value: " + maxPredictionValue);
-
         if (maxPredictionValue < this.activationThreshold) return;
 
         let label = predictionTensor.argMax(1).dataSync()[0];
-        console.log("label: " + label);
 
         this.executeAction(label);
     }
