@@ -211,8 +211,8 @@ main {
 
 #training-settings {
     width: 50%;
-    margin-left: auto;
-    margin-right: auto;
+    padding-left: 3rem;
+    padding-right: 3rem;
 
     .button {
         margin-top: 1rem;
@@ -246,8 +246,9 @@ main {
 
 #prediction-settings {
     width: 50%;
-    margin-left: auto;
-    margin-right: auto;
+    margin-bottom: 5rem;
+    padding-left: 3rem;
+    padding-right: 3rem;
 
     div:first-of-type {
         display: flex;

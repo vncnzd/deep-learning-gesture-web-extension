@@ -51,30 +51,32 @@
                 <canvas id="image-preview-canvas"></canvas>
             </div>
         </div>
-        <div class="column-start-1 column-span-3" id="training-settings">
-            <h2>Training settings</h2>
-            <div id="input-wrapper">
-                <label for="number-of-epochs-input">Number of epochs</label>
-                <input type="number" name="number-of-epochs-input" id="number-of-epochs-input" min="1" max="10000" value="50">
+        <div class="column-start-1 column-span-3 flex">
+            <div class="column-start-1 column-span-3" id="training-settings">
+                <h2>Training settings</h2>
+                <div id="input-wrapper">
+                    <label for="number-of-epochs-input">Number of epochs</label>
+                    <input type="number" name="number-of-epochs-input" id="number-of-epochs-input" min="1" max="10000" value="50">
+                </div>
+                <div class="flex" id="model-buttons">
+                    <button class="button background-dark" id="train-model-button">Train model</button>
+                    <button class="button background-alert" id="remove-model-button">Remove trained model</button>
+                </div>
+                <div class="loading-bar-wrapper">
+                    <div class="loading-bar" id="training-loading-bar"></div>
+                </div>
+                <p>Loss: <span id="loss-span"></span></p>
             </div>
-            <div class="flex" id="model-buttons">
-                <button class="button background-dark" id="train-model-button">Train model</button>
-                <button class="button background-alert" id="remove-model-button">Remove trained model</button>
-            </div>
-            <div class="loading-bar-wrapper">
-                <div class="loading-bar" id="training-loading-bar"></div>
-            </div>
-            <p>Loss: <span id="loss-span"></span></p>
-        </div>
-        <div class="column-start-1 column-span-3" id="prediction-settings">
-            <h2>Prediction settings</h2>
-            <div>
-                <label for="activation-threshold-input">Activation Threshold</label>
-                <input type="number" name="activation-treshold-input" id="activation-threshold-input" min="0.5" max="0.99" value="0.9" step="0.01">
-            </div>
-            <div id="prediction-settings-buttons">
-                <button class="button" id="start-button">Start</button>
-                <button class="button" id="stop-button">Stop</button>
+            <div class="column-start-1 column-span-3" id="prediction-settings">
+                <h2>Prediction settings</h2>
+                <div>
+                    <label for="activation-threshold-input">Activation Threshold</label>
+                    <input type="number" name="activation-treshold-input" id="activation-threshold-input" min="0.5" max="0.99" value="0.9" step="0.01">
+                </div>
+                <div id="prediction-settings-buttons">
+                    <button class="button" id="start-button">Start</button>
+                    <button class="button" id="stop-button">Stop</button>
+                </div>
             </div>
         </div>
     </main>
