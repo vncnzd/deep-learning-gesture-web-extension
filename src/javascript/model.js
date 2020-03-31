@@ -69,17 +69,16 @@ class Model {
     }
 
     async train(imageTensors, labelTensors, numberOfEpochs, epochCallback) {
-        await this.model.fit(imageTensors, labelTensors, {
+        return this.model.fit(imageTensors, labelTensors, {
             batch_size: 20,
             epochs: numberOfEpochs,
             callbacks: {
                 onEpochEnd: epochCallback,
             }
+        }).then(() => {
+            this.model.save(this.storageDirectory);
         });
 
-        this.model.save(this.storageDirectory).then(() => {
-            console.log("Model was saved");
-        });
     }
 
     async load(storageDirectory) {
@@ -90,7 +89,6 @@ class Model {
         if (model != null) {
             this.model = model;
             this.compileModel(this.model);
-            console.log("Loading model successful");
         }
     }
 
@@ -100,8 +98,6 @@ class Model {
                 localStorage.removeItem(key);
             }
         });
-
-        console.log("Removing model successful");
     }
 
     predict(imageTensor) {

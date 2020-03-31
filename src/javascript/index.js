@@ -13,7 +13,7 @@ class App {
         this.loadingBarProgress = 0;
         this.currentImagePreviewIndex = 0;
         this.shouldMakePredictions = false;
-        this.imageSize = 80;
+        this.imageSize = 60;
         
         this.loadShouldMakePredictions().then(this.setPredictionButtonsColors.bind(this));
         this.loadActivationThreshold();
@@ -24,8 +24,7 @@ class App {
         this.dataContainer = new DataContainer();
         this.dataContainer.localStorageKey = "training-data";
         this.dataContainer.load().then(this.changeImageStack.bind(this)).catch((error) => { 
-            console.log(error);
-            this.elementsManager.setMessage(error);
+            this.elementsManager.setMessageAndLog(error);
         });
         
         this.modelStorageName = "gesture-extension-model";
@@ -42,7 +41,11 @@ class App {
         this.elementsManager.captureImageButtonElement.addEventListener('click', this.captureImage.bind(this));
         this.elementsManager.trainNetworkButtonElement.addEventListener('click', this.trainModel.bind(this));
         this.elementsManager.removeModelButtonElement.addEventListener('click', this.removeModelFromStorage.bind(this));
-        this.elementsManager.saveImagesButtonElement.addEventListener('click', () => { this.dataContainer.save(); });
+        this.elementsManager.saveImagesButtonElement.addEventListener('click', () => { 
+            this.dataContainer.save().then(() => {
+                this.elementsManager.setMessageAndLog("Images saved");
+            }); 
+        });
         this.elementsManager.removeImagesButtonElement.addEventListener('click', this.removeAllImageTensors.bind(this));
 
         this.elementsManager.nextImageButtonElement.addEventListener('click', () => { this.cycleThroughImages(1); });
@@ -90,6 +93,7 @@ class App {
                 let currentFeatureLabel = this.getCurrentFeatureLabel();
                 this.loadImageWithIndexAndLabelIntoCanvas(this.currentImagePreviewIndex, currentFeatureLabel, this.elementsManager.imagePreviewCanvasElement);
                 this.setExampleIndicator(currentFeatureLabel, this.elementsManager.numberOfExamplesElement);
+                this.elementsManager.setMessageAndLog("Data container loaded");
             }
         });
     }
@@ -99,8 +103,7 @@ class App {
         this.dataContainer.removeTensorFromBatch(currentFeatureLabel, this.currentImagePreviewIndex);
         this.cycleThroughImages(-1);
         this.setExampleIndicator(currentFeatureLabel, this.elementsManager.numberOfExamplesElement);
-        console.log("Removing tensor successful");
-        this.elementsManager.setMessage("Removing tensor successful");
+        this.elementsManager.setMessageAndLog("Removing tensor successful");
     }
 
     changeImageStack() {
@@ -129,8 +132,7 @@ class App {
         this.dataContainer.removeAllTensorsFromStorage().then(() => {
             this.clearCanvas(this.elementsManager.imagePreviewCanvasElement);
             this.setExampleIndicator(this.currentFeatureLabel, this.elementsManager.numberOfExamplesElement)
-            console.log("Removing all tensors successful");
-            this.elementsManager.setMessage("Removing all tensors successful");
+            this.elementsManager.setMessageAndLog("Removing all tensors successful");
         });
     }
 
@@ -145,15 +147,21 @@ class App {
 
         this.currentImagePreviewIndex = this.dataContainer.getNumberOfTensorsForLabel(currentFeatureLabel) - 1;
         this.setExampleIndicator(currentFeatureLabel, this.elementsManager.numberOfExamplesElement);
+
+        this.elementsManager.setMessageAndLog("Image captured");
     }
 
     removeModelFromStorage() {
         this.model.removeFromStorage();
+        this.elementsManager.setMessageAndLog("Model removed");
     }
 
     async trainModel() {
         let numberOfEpochs = parseInt(this.elementsManager.numberOfEpochsInputElement.value);
-        this.model.train(this.dataContainer.xTrain, this.dataContainer.yTrain, numberOfEpochs, this.updateTrainingProgress.bind(this));
+        this.elementsManager.setMessageAndLog("Train model");
+        this.model.train(this.dataContainer.xTrain, this.dataContainer.yTrain, numberOfEpochs, this.updateTrainingProgress.bind(this)).then(() => {
+            this.elementsManager.setMessageAndLog("Model trained");
+        });
     }
 
     getCurrentFeatureLabel() {

@@ -38,7 +38,8 @@ class ElementsManager {
         return options;
     }
 
-    setMessage(message) {
+    setMessageAndLog(message) {
+        console.log(message);
         this.messageElement.innerHTML = message;
     }
 }
