@@ -1,2 +1,13 @@
 # deep-learning-gesture-web-extension
-Install the npm modules and run the build script.
+
+Change to the project directory and execute the following commands.
+
+```
+npm install
+```
+
+```
+npm run build
+```
+
+
