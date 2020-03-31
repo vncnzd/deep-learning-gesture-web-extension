@@ -1,0 +1,1 @@
+document.querySelector("#options-page-link").href = browser.extension.getURL("options/options.html");
